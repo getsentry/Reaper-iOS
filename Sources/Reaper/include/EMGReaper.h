@@ -7,7 +7,6 @@ typedef void (^HandleTypes)(NSArray<NSString *> *);
 @interface EMGReaper : NSObject
 
 + (instancetype)sharedInstance;
-- (void)startWithAPIKey:(NSString *)APIKey;
 - (void)startWithHandler:(HandleTypes)handleTypes;
 
 - (instancetype)init NS_UNAVAILABLE;

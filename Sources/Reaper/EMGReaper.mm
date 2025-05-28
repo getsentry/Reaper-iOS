@@ -6,8 +6,6 @@
 #import <mach-o/dyld_images.h>
 #import <mach-o/getsect.h>
 #import "EMGObjcRuntimeTypes.h"
-#import "EMGReaperConfig.h"
-#import "EMGReaperBatch.h"
 
 // Forward declare this, the implementation is in Swift
 @interface NameFinder
@@ -17,13 +15,8 @@
 @end
 
 @implementation EMGReaper {
-    NSString *_APIKey;
-    NSURLSession *_session;
     dispatch_queue_t _queue;
     NSMutableSet <NSString *> *_usedTypesReported;
-    EMGReaperConfig *_config;
-    NSString *_uuid;
-    EMGReaperBatch *_batch;
     HandleTypes _handleTypes;
 }
 
@@ -37,15 +30,6 @@
     return sSharedInstance;
 }
 
-#if DEBUG
-__used __attribute__((constructor)) void EMGGo() {
-    // Give a little more time for the system to set up
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [[EMGReaper sharedInstance] startWithAPIKey:@"12345"];
-    });
-}
-#endif
-
 - (void)startWithHandler:(HandleTypes)handleTypes {
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
@@ -53,16 +37,12 @@ __used __attribute__((constructor)) void EMGGo() {
       if (majorVersion != 15 && majorVersion != 16 && majorVersion != 17 && majorVersion != 18) {
           return;
       }
-      NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-      _session = [NSURLSession sessionWithConfiguration:configuration];
-      _uuid = [NSUUID UUID].UUIDString;
       _handleTypes = handleTypes;
 
       dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(NULL, QOS_CLASS_UTILITY, 0);
       _queue = dispatch_queue_create("com.emergetools.reaper", attr);
 
       _usedTypesReported = [NSMutableSet set];
-      _config = [EMGReaperConfig fromUserDefaults];
 
       [[NSNotificationCenter defaultCenter] addObserver:self
                                                selector:@selector(didEnterBackground)
@@ -74,14 +54,6 @@ __used __attribute__((constructor)) void EMGGo() {
                                                    name:UIApplicationWillTerminateNotification
                                                  object:nil];
   });
-}
-
-- (void)startWithAPIKey:(NSString *)APIKey
-{
-    _APIKey = APIKey;
-  [self startWithHandler:^(NSArray<NSString *> *types) {
-    [self uploadTypes:types];
-  }];
 }
 
 - (void)didEnterBackground
@@ -234,21 +206,8 @@ NSString *removeUnknownContext(NSString *input) {
   return usedTypes;
 }
 
-BOOL randomWithProbability(double probability) {
-  if (probability < 0.0 || probability > 1.0) {
-    NSLog(@"Probability must be between 0.0 and 1.0");
-    return NO;
-  }
-  double randomValue = (double)arc4random() / UINT32_MAX;
-  return randomValue < probability;
-}
-
 - (void)uploadReport
 {
-    if (!randomWithProbability(_config.samplePercentage)) {
-        return;
-    }
-
     unsigned int imageCount = _dyld_image_count();
     NSString *mainBinaryPath = [[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent].path;
     NSMutableArray *usedTypes = [NSMutableArray array];
@@ -269,83 +228,13 @@ BOOL randomWithProbability(double probability) {
         }
     }
 
-    // Avoid an API request if we have nothing new to report
+    // Avoid running the callback if we have nothing new to report
     if (unreportedUsedTypes.count == 0) {
         return;
     }
     [_usedTypesReported addObjectsFromArray:unreportedUsedTypes];
-
-    if (!_batch) {
-      _batch = [EMGReaperBatch fromDisk];
-    }
-    [_batch addTypes:unreportedUsedTypes];
-    if ([_batch shouldKeepBatching:_config]) {
-      [_batch saveBatch];
-      return;
-    }
   
-    NSArray<NSString *> *allTypes = [_batch allTypes];
-  
-    // Delete the current batch since it is being sent
-    [_batch clearFromDisk];
-    _batch = nil;
-  
-    _handleTypes(allTypes);
-}
-
-- (void)uploadTypes:(NSArray<NSString *> *)types {
-  // CFBundleVersion is probably required for all builds, but just to be safe, fall back to CFBundleShortVersionString
-  NSString *version = [[NSBundle mainBundle] infoDictionary][@"CFBundleVersion"] ?: @"unknown";
-  NSString *shortVersionString = [[NSBundle mainBundle] infoDictionary][@"CFBundleShortVersionString"] ?: @"unknown";
-  NSString *bundleId = [[NSBundle mainBundle] bundleIdentifier];
-  NSDictionary *dictionary = @{
-      @"seen": types,
-      @"appId": bundleId,
-      @"version": version,
-      @"shortVersionString": shortVersionString,
-      @"apiKey": _APIKey,
-      // A single session can report multiple times, each time with only the new used classes reported
-      // This keeps track of the session so we can tell all classes used during a session.
-      @"uuid": _uuid,
-  };
-
-  NSString *apiPath = @"https://reaper.emergetools.com/report";
-  NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:apiPath]];
-  request.HTTPMethod = @"POST";
-  [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-  [request setValue:@"deflate" forHTTPHeaderField:@"Content-Encoding"];
-  NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dictionary options:0 error:nil];
-  NSError *error;
-  NSData *compressedData = [jsonData compressedDataUsingAlgorithm:NSDataCompressionAlgorithmZlib error:&error];
-  if (error) {
-      NSLog(@"[Reaper] Error compressing data %@", error);
-  } else {
-    [[_session uploadTaskWithRequest:request fromData:compressedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-      if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-        if (httpResponse.statusCode == 404) {
-          NSLog(@"[Reaper] Error from Reaper API call. Ensure an app with bundle id %@ and version %@ has been uploaded to Emerge.", bundleId, shortVersionString);
-        } else if (httpResponse.statusCode >= 400) {
-          NSLog(@"[Reaper] Error uploading to Reaper API %ld", (long)httpResponse.statusCode);
-        } else if (data && httpResponse.statusCode >= 200 && httpResponse.statusCode < 300) {
-          NSDictionary *responseJson = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-          if (error) {
-            NSLog(@"[Reaper] Error decoding response %@", error);
-          } else {
-            NSDictionary *configJson = responseJson[@"config"];
-            if (configJson) {
-              // Apply new config
-              EMGReaperConfig *config = [EMGReaperConfig fromDictionary:configJson];
-              dispatch_async(self->_queue, ^{
-                [config saveToUserDefaults];
-                self->_config = config;
-              });
-            }
-          }
-        }
-      }
-    }] resume];
-  }
+    _handleTypes(unreportedUsedTypes);
 }
 
 @end
