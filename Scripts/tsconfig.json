@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "target": "es2022",
+    "outDir": ".build",
+    "module": "es2022",
+    "noEmitOnError": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+  }
+}

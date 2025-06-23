@@ -1,3 +1,5 @@
 .DS_Store
 Reaper.xcframework.zip
-
+.swiftpm
+Scripts/.build
+node_modules

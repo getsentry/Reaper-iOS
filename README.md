@@ -2,6 +2,9 @@
 
 A framework for detecting dead code at runtime. Read more about it in the [launch blog post](https://www.emergetools.com/blog/posts/dead-code-detection-with-reaper).
 
+The framework detects the set of classes that are used, and the `Scripts` directory in this repo contains a program to determine the set of all possible types that reaper can detect.
+The difference of these sets are the unused types. 
+
 ## Installation
 
 ### Swift Package Manager
@@ -31,7 +34,11 @@ import Reaper
 
 ...
 
-EMGReaper.sharedInstance().start(withAPIKey: "myKey") // The key is provided to you by Emerge
+EMGReaper.sharedInstance().start { types in
+  // Handle list of used types
+}
 ```
 
-More details can be found in the [docs](https://docs.emergetools.com/docs/reaper).
+## Determining all types
+
+Run `tsc ./Scripts/main.ts` then `node ./Scripts/main.ts PATH_TO_YOUR_APP.app`
