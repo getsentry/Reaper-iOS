@@ -1,9 +1,9 @@
 # Reaper
 
-A framework for detecting dead code at runtime. Read more about it in the [launch blog post](https://www.emergetools.com/blog/posts/dead-code-detection-with-reaper).
+A framework for detecting dead code at runtime - Reaper is an SDK added to your app to report which Swift and Objective-C types were used for each user session. It supports all classes written in Objective-C, non-generic Swift classes, and some Swift structs/enums.
 
 The framework detects the set of classes that are used, and the `Scripts` directory in this repo contains a program to determine the set of all possible types that reaper can detect.
-The difference of these sets are the unused types. 
+The difference of these sets are the unused types.
 
 ## Installation
 
@@ -42,3 +42,10 @@ EMGReaper.sharedInstance().start { types in
 ## Determining all types
 
 Run `tsc ./Scripts/main.ts` then `node ./Scripts/main.ts PATH_TO_YOUR_APP.app`
+
+## Resources
+
+- [Example backend](https://github.com/getsentry/reaper-server)
+- [Performance & Size Impact](https://docs.emergetools.com/docs/reaper#performance-impact)
+- [Launch Blog Post](https://www.emergetools.com/blog/posts/dead-code-detection-with-reaper).
+- [Reaper for Android](https://github.com/EmergeTools/emerge-android/tree/main/reaper)
