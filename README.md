@@ -5,6 +5,8 @@ A framework for detecting dead code at runtime - Reaper is an SDK added to your 
 The framework detects the set of classes that are used, and the `Scripts` directory in this repo contains a program to determine the set of all possible types that reaper can detect.
 The difference of these sets are the unused types.
 
+See additional [resources](#resources) below.
+
 ## Installation
 
 ### Swift Package Manager
