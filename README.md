@@ -49,5 +49,6 @@ Run `tsc ./Scripts/main.ts` then `node ./Scripts/main.ts PATH_TO_YOUR_APP.app`
 
 - [Example backend](https://github.com/getsentry/reaper-server)
 - [Performance & Size Impact](https://docs.emergetools.com/docs/reaper#performance-impact)
+- [Open sourcing Reaper](https://blog.sentry.io/an-open-source-sdk-for-finding-dead-code/)
 - [Launch Blog Post](https://www.emergetools.com/blog/posts/dead-code-detection-with-reaper).
 - [Reaper for Android](https://github.com/EmergeTools/emerge-android/tree/main/reaper)
