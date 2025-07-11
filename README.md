@@ -11,7 +11,7 @@ See additional [resources](#resources) below.
 
 ### Swift Package Manager
 
-Add Reaper as a dependency with Swift package manager using the URL https://github.com/EmergeTools/Reaper
+Add Reaper as a dependency with Swift package manager using the URL https://github.com/getsentry/Reaper-iOS.git
 
 ### CocoaPods
 
