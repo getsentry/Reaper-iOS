@@ -16,7 +16,6 @@ public final class NameFinder: NSObject {
   @objc public static func getName(ptr: uintptr_t, qualified: Bool) -> String? {
     let (s, length) = _getTypeName(ptr, qualified: qualified)
     let buffer = UnsafeBufferPointer(start: s, count: length)
-    let data = Data(buffer: buffer)
-    return String(data: data, encoding: .utf8)
+    return String(bytes: buffer, encoding: .utf8)
   }
 }
