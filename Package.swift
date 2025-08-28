@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .library(
             name: "Reaper",
+            type: nil,
             targets: ["Reaper"]),
     ],
     targets: [
