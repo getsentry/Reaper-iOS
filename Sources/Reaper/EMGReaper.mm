@@ -1,6 +1,6 @@
 #import "EMGReaper.h"
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+#import "ReaperUIKit.h"
 #import <objc/runtime.h>
 #import <mach-o/dyld.h>
 #import <mach-o/dyld_images.h>
@@ -46,12 +46,12 @@
 
       [[NSNotificationCenter defaultCenter] addObserver:self
                                                selector:@selector(didEnterBackground)
-                                                   name:UIApplicationDidEnterBackgroundNotification
+                                                   name:emg_backgroundNotificationName()
                                                  object:nil];
 
       [[NSNotificationCenter defaultCenter] addObserver:self
                                                selector:@selector(willTerminate)
-                                                   name:UIApplicationWillTerminateNotification
+                                                   name:emg_terminateNotificationName()
                                                  object:nil];
   });
 }

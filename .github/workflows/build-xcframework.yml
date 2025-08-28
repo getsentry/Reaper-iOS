@@ -1,0 +1,64 @@
+name: Build XCFramework
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-xcframework:
+    runs-on: macos-15
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Modify Package.swift for dynamic library
+      run: |
+        sed -i '' 's/type: nil/type: .dynamic/g' Package.swift
+    
+    - name: Select Xcode
+      run: |
+        sudo xcode-select -s /Applications/Xcode_16.4.app
+      
+    - name: List available SDKs
+      run: |
+        echo "Xcode version:"
+        xcodebuild -version
+        echo ""
+        echo "Available iOS SDKs:"
+        xcodebuild -showsdks | grep iphoneos || echo "No iOS SDKs found"
+        echo ""
+        echo "Available iOS Simulator SDKs:"
+        xcodebuild -showsdks | grep iphonesimulator || echo "No iOS Simulator SDKs found"
+        echo ""
+        echo "All available SDKs:"
+        xcodebuild -showsdks
+        
+    - name: Build for iOS Device
+      run: |
+        xcodebuild -workspace . -scheme Reaper -config Release -destination "generic/platform=iOS" -derivedDataPath "build" -sdk iphoneos18.5
+        
+    - name: Build for iOS Simulator
+      run: |
+        xcodebuild -workspace . -scheme Reaper -config Release -destination "generic/platform=iOS Simulator" -derivedDataPath "build" -sdk iphonesimulator18.5
+        
+    - name: Create XCFramework
+      run: |
+        xcodebuild -create-xcframework \
+          -framework build/Build/Products/Release-iphoneos/PackageFrameworks/Reaper.framework \
+          -framework build/Build/Products/Release-iphonesimulator/PackageFrameworks/Reaper.framework \
+          -output build/Reaper.xcframework
+          
+    - name: Create ZIP archive
+      run: |
+        cd build
+        zip -r Reaper.xcframework.zip Reaper.xcframework
+        
+    - name: Upload XCFramework artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Reaper.xcframework
+        path: build/Reaper.xcframework.zip
+        
