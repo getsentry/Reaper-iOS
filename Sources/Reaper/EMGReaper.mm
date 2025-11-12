@@ -34,7 +34,7 @@
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
       NSInteger majorVersion = [[NSProcessInfo processInfo] operatingSystemVersion].majorVersion;
-      if (majorVersion != 15 && majorVersion != 16 && majorVersion != 17 && majorVersion != 18) {
+      if (majorVersion != 15 && majorVersion != 16 && majorVersion != 17 && majorVersion != 18 && majorVersion != 26) {
           return;
       }
       _handleTypes = handleTypes;
