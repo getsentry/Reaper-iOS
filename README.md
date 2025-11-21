@@ -29,6 +29,17 @@ Download the latest XCFramework from [Github releases](https://github.com/Emerge
 
 ## Setup
 
+* Fetch the repo locally, eg via `gh repo clone getsentry/Reaper-iOS`
+* Navigate to the `Scripts` directory `cd Scripts`
+* Install the dependencies with `npm install`
+* Build the project `npm tsc --project .`
+* If you haven't already, archive your app from Xcode. You might need to only export `arm64` slices
+* Locate your .app, usually at `/Users/{you-user}/Library/Developer/Xcode/Archives/{date}/{app-name-and-date}.xcarchive/Products/Applications/{app-name}.app` 
+* Scan for files with `node .build/main.js {your-app-path.app} output.json`
+* You can ignore the errors if a `output.json` file has been created.
+
+## Integration
+
 Start the SDK at app launch by adding the following code:
 
 ```Swift
@@ -41,9 +52,6 @@ EMGReaper.sharedInstance().start { types in
 }
 ```
 
-## Determining all types
-
-Run `tsc ./Scripts/main.ts` then `node ./Scripts/main.ts PATH_TO_YOUR_APP.app`
 
 ## Resources
 
