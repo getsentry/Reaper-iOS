@@ -159,7 +159,7 @@ function validSwiftTypesForReaper(parser: MachOParser, ranges: SectionRange[]): 
   const sectionSize = swiftTypesSection.size;
   const swiftTypesData = buf.subarray(sectionStart, sectionStart + sectionSize);
 
-  const numTypes = Math.floor(swiftTypesData.length / 8);
+  const numTypes = Math.floor(swiftTypesData.length / 4);
 
   const validTypes: string[] = [];
 
